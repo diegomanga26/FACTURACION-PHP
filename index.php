@@ -3,8 +3,13 @@ $url = "https://64838534f2e76ae1b95c9c0a.mockapi.io/data";
 global $dataUser;
 if (isset($_POST['guardar'])) {
     guardarData($url);
-} if (isset($_POST['buscar'])) {
-    buscarData($url, $dataUser);
+} else if (isset($_POST['buscar'])) {
+    buscarData($url);
+} else if (isset($_POST['editar'])) {
+    $id = $_POST["id"];
+    editarData($url, $id);
+} else if (isset($_POST['flecha'])) {
+    seleccionarUsuario($url);
 }
 
 function guardarData($url) {
@@ -46,7 +51,7 @@ function obtenerData($url) {
     return $users;
 };
 
-function buscarData($url, $dataUser) {
+function buscarData($url) {
     global $dataUser;
     $dataCedula = $_POST['cedula'];
     $data = file_get_contents($url);
@@ -56,7 +61,52 @@ function buscarData($url, $dataUser) {
             $dataUser = $x;
         }
     };
-    return $dataUser;
+};
+function editarData($url, $id) {
+    $nombre = $_POST["nombre"];
+    $apellido = $_POST["apellido"];
+    $direccion = $_POST["direccion"];
+    $edad = $_POST["edad"];
+    $email = $_POST["email"];
+    $horario = $_POST["horario"];
+    $team = $_POST["team"];
+    $trainer = $_POST["trainer"];
+    $cedula = $_POST["cedula"];
+
+    $cred['http']['method'] = 'PUT';
+    $cred['http']['header'] = 'Content-Type: application/json';
+
+    $datosTabla = array(
+        'nombre' => $nombre,
+        'apellido' => $apellido,
+        'direccion' => $direccion,
+        'edad' => $edad,
+        'email' => $email,
+        'horario' => $horario,
+        'team' => $team,
+        'trainer' => $trainer,
+        'cedula' => $cedula
+    );
+    $urlId = $url ."/". $id;
+    $data = json_encode($datosTabla);
+    $cred['http']['content'] = $data;
+    $configuracion = stream_context_create($cred);
+    $_DATA = file_get_contents($urlId, false, $configuracion);
+    json_decode($_DATA,true);
+
+};
+
+function seleccionarUsuario($url) {
+    global $dataUser;
+    $dataCedula = $_POST['cedulax'];
+    $data = file_get_contents($url);
+    $users = json_decode($data, true);
+    foreach ($users as $x) {
+        if ($dataCedula === $x['cedula']) {
+            $dataUser = $x;
+        }
+    };
+
 };
 $user = obtenerData($url);
 ?>
@@ -144,6 +194,7 @@ $user = obtenerData($url);
                 <div class="row botones1">
                     <div class="col">
                         <input type="submit" value="✔️" class="boton" name="guardar">
+                        <input type="hidden" class="boton" name="id" value="<?php echo isset($dataUser) ? $dataUser["id"]: ""; ?>">
                     </div>
                     <div class="col">
                         <input type="submit" value="❌" class="boton" name="eliminar">
@@ -179,7 +230,6 @@ $user = obtenerData($url);
                         <th>Horario:</th>
                         <th>Team:</th>
                         <th>Trainer:</th>
-                        <th>Cédula:</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -195,7 +245,12 @@ $user = obtenerData($url);
                     <td><?php echo $x['horario']?></td>
                     <td><?php echo $x['team']?></td>
                     <td><?php echo $x['trainer']?></td>
-                    <td><?php echo $x['cedula']?></td>
+                    <td>
+                        <form action="" method="POST">
+                            <input type="text" name="cedulax" value="<?php echo $x['cedula']?>">
+                            <input type="submit" value="⬆️" name="flecha">
+                        </form>
+                    </td>
                 </tr>
                 <?php
                 endforeach;
