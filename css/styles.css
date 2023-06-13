@@ -34,3 +34,11 @@ text-align: center;
 .botones1 {
     margin-bottom: 40px;
 }
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 5px;
+    text-align: justify;
+}
