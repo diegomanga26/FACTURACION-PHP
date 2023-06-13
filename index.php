@@ -1,3 +1,65 @@
+<?php
+$url = "https://64838534f2e76ae1b95c9c0a.mockapi.io/data";
+global $dataUser;
+if (isset($_POST['guardar'])) {
+    guardarData($url);
+} if (isset($_POST['buscar'])) {
+    buscarData($url, $dataUser);
+}
+
+function guardarData($url) {
+    $nombre = $_POST["nombre"];
+    $apellido = $_POST["apellido"];
+    $direccion = $_POST["direccion"];
+    $edad = $_POST["edad"];
+    $email = $_POST["email"];
+    $horario = $_POST["horario"];
+    $team = $_POST["team"];
+    $trainer = $_POST["trainer"];
+    $cedula = $_POST["cedula"];
+
+    $cred['http']['method'] = 'POST';
+    $cred['http']['header'] = 'Content-Type: application/json';
+
+    $datosTabla = array(
+        'nombre' => $nombre,
+        'apellido' => $apellido,
+        'direccion' => $direccion,
+        'edad' => $edad,
+        'email' => $email,
+        'horario' => $horario,
+        'team' => $team,
+        'trainer' => $trainer,
+        'cedula' => $cedula
+    );
+
+    $datosTabla = json_encode($datosTabla);
+    $cred['http']['content'] = $datosTabla;
+    $configuracion = stream_context_create($cred);
+    $_DATA = file_get_contents($url, false, $configuracion);
+    json_decode($_DATA, true);
+};
+
+function obtenerData($url) {
+    $datosTabla = file_get_contents($url);
+    $users = json_decode($datosTabla, true);
+    return $users;
+};
+
+function buscarData($url, $dataUser) {
+    global $dataUser;
+    $dataCedula = $_POST['cedula'];
+    $data = file_get_contents($url);
+    $users = json_decode($data, true);
+    foreach ($users as $x) {
+        if ($dataCedula === $x['cedula']) {
+            $dataUser = $x;
+        }
+    };
+    return $dataUser;
+};
+$user = obtenerData($url);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,21 +78,21 @@
                 <div class="row">
                     <div class="col">
                         <label for="">Nombre:</label><br>
-                        <input type="text" placeholder="Ingrese su nombre por favor" name="nombre">
+                        <input type="text" placeholder="Ingrese su nombre por favor" name="nombre" value="<?php echo isset($dataUser) ? $dataUser["nombre"]: ""; ?>">
                     </div>
                 </div>
                 <br>
                 <div class="row">
                     <div class="col">
                         <label for="">Apellido:</label><br>
-                        <input type="text" placeholder="Ingrese su apellido por favor" name="apellido">
+                        <input type="text" placeholder="Ingrese su apellido por favor" name="apellido" value="<?php echo isset($dataUser) ? $dataUser["apellido"]: ""; ?>">
                     </div>
                 </div>
                 <br>
                 <div class="row">
                     <div class="col">
                         <label for="">Dirección:</label><br>
-                        <input type="text" placeholder="Ingrese su dirección por favor" name="direccion">
+                        <input type="text" placeholder="Ingrese su dirección por favor" name="direccion" value="<?php echo isset($dataUser) ? $dataUser["direccion"]: ""; ?>">
                     </div>
                 </div>
             </div>
@@ -43,14 +105,14 @@
                 <div class="row">
                     <div class="col">
                         <label for="">Edad:</label><br>
-                        <input type="number" placeholder="Ingrese su edad por favor" name="edad">
+                        <input type="number" placeholder="Ingrese su edad por favor" name="edad" value="<?php echo isset($dataUser) ? $dataUser["edad"]: ""; ?>">
                     </div>
                 </div>
                 <br>
                 <div class="row">
                     <div class="col">
                         <label for="">Email:</label><br>
-                        <input type="text" placeholder="Ingrese su dirección por favor" name="email">
+                        <input type="text" placeholder="Ingrese su dirección por favor" name="email" value="<?php echo isset($dataUser) ? $dataUser["email"]: ""; ?>">
                     </div>
                 </div>
             </div>
@@ -60,21 +122,21 @@
                 <div class="row">
                     <div class="col">
                         <label for="">Horario:</label><br>
-                        <input type="time" name="horario">
+                        <input type="time" name="horario" value="<?php echo isset($dataUser) ? $dataUser["horario"]: ""; ?>">
                     </div>
                 </div>
                 <br>
                 <div class="row">
                     <div class="col">
                         <label for="">Team:</label><br>
-                        <input type="text" placeholder="Ingrese su team por favor" name="team">
+                        <input type="text" placeholder="Ingrese su team por favor" name="team" value="<?php echo isset($dataUser) ? $dataUser["team"]: ""; ?>">
                     </div>
                 </div>
                 <br>
                 <div class="row">
                     <div class="col">
                         <label for="">Trainer:</label><br>
-                        <input type="text" placeholder="Ingrese su trainer por favor" name="trainer">
+                        <input type="text" placeholder="Ingrese su trainer por favor" name="trainer" value="<?php echo isset($dataUser) ? $dataUser["trainer"]: ""; ?>">
                     </div>
                 </div>
             </div>
@@ -84,15 +146,15 @@
                         <input type="submit" value="✔️" class="boton" name="guardar">
                     </div>
                     <div class="col">
-                        <input type="submit" value="❌" class="boton">
+                        <input type="submit" value="❌" class="boton" name="eliminar">
                     </div>
                 </div>
                 <div class="row botones2">
                     <div class="col">
-                        <input type="submit" value="✍🏻" class="boton">
+                        <input type="submit" value="✍🏻" class="boton" name="editar">
                     </div>
                     <div class="col">
-                        <input type="submit" value="🔍" class="boton">
+                        <input type="submit" value="🔍" class="boton" name="buscar">
                     </div>
                 </div>
                 <br>
@@ -105,7 +167,6 @@
             </div>
         </div>
         </form>
-
         <div class="row caja">
             <table>
                 <thead>
@@ -122,7 +183,23 @@
                     </tr>
                 </thead>
                 <tbody>
-
+                <?php 
+                foreach ($user as $x):
+                ?>
+                <tr>
+                    <td><?php echo $x['nombre']?></td>
+                    <td><?php echo $x['apellido']?></td>
+                    <td><?php echo $x['direccion']?></td>
+                    <td><?php echo $x['edad']?></td>
+                    <td><?php echo $x['email']?></td>
+                    <td><?php echo $x['horario']?></td>
+                    <td><?php echo $x['team']?></td>
+                    <td><?php echo $x['trainer']?></td>
+                    <td><?php echo $x['cedula']?></td>
+                </tr>
+                <?php
+                endforeach;
+                ?>
                 </tbody>
             </table>
         </div>
